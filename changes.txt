@@ -24,3 +24,12 @@
 - Uses the shared ciphervault keystore so updates install without uninstalling
 - Built via GitHub Actions workflow (tag push v* triggers signed release)
 - APK published to GitHub Releases as J~Net-Thermal-Printer.apk
+
+## 2026-08-18 - v1.0.0 (release completed)
+- First release built successfully on GitHub Actions (workflow run 32171729222)
+- APK downloaded and stored at apk/J~Net-Thermal-Printer.apk
+- Signed with the shared ciphervault keystore (SHA-256 6e40639a...) so future
+  updates install over this version without needing an uninstall
+- GitHub Release (newest): https://github.com/jnetai-clawbot/BT-Thermal-printer-Android-App/releases
+  (tag v1.0.0, asset J.Net-Thermal-Printer.apk - GitHub strips the ~ in the name)
+- No backups made yet: no major updates have been applied since the first working release
