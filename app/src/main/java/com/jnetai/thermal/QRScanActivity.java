@@ -67,8 +67,8 @@ public class QRScanActivity extends AppCompatActivity {
     }
 
     private void startCamera() {
-        androidx.camera.lifecycle.ProcessCameraProvider cameraProviderFuture;
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+        com.google.common.util.concurrent.ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
+                ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider provider = cameraProviderFuture.get();

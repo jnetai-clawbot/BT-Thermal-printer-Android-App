@@ -138,7 +138,7 @@ public class EscPos {
             Diagnostics.log(ErrorCodes.PR_003, "EscPos", "write", e, "Encoding failed for charset " + charset);
             try {
                 out.write(text.getBytes("UTF-8"));
-            } catch (UnsupportedEncodingException ex) {
+            } catch (Exception ex) {
                 out.write(0);
             }
         }
