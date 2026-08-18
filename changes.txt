@@ -1,0 +1,26 @@
+# J~Net Thermal Printer - Changes Log
+
+## 2026-08-18 - v1.0.0
+### Initial Release
+- Full English Android app: Bluetooth thermal POS printer (PT210 compatible)
+- Connect from Android mobile via Bluetooth straight to the mobile printer
+- POS receipt making via templates (style, layout, text size, logo/image)
+- Template editing (add/edit/delete/reorder lines, alignment, bold, underline, dashes, spacers)
+- Receipt saving (internal + export to /storage/emulated/0/Download/) and sending via email
+- Printing to the thermal printer via Bluetooth (default: PT210 Thermal Printer)
+- Print modes: Copy & Paste Text, Print File, Print Template (default), Print Image
+- Label templates for different label sizes (58x40 default, width/height configurable in settings)
+- QR code generator (generate from text, save to PNG in Downloads, print)
+- QR code reader using camera (ML Kit) to reveal text to save/print
+- Settings: print density/darkness, text size, layout, alignment, portrait/landscape,
+  copies, paper feed, paper cut, character encoding, QR mode/module size, label sizes
+- Select printer (default PT210), refresh list of paired devices
+- Printer Test option in settings (prints character test pattern + QR)
+- About section: Made by jnetai.com, full version number, Check for Update,
+  Share App, Open GitHub Releases (falls back to releases page if check fails)
+- Persistent error handling: every failure logs a clear error code, stack trace,
+  device info and metadata to an in-app Diagnostics log (view in Settings)
+- Dark centered themed UI with bottom padding so elements are never cut off
+- Uses the shared ciphervault keystore so updates install without uninstalling
+- Built via GitHub Actions workflow (tag push v* triggers signed release)
+- APK published to GitHub Releases as J~Net-Thermal-Printer.apk
