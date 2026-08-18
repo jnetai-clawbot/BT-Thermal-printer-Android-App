@@ -1,6 +1,7 @@
 package com.jnetai.thermal;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Size;
@@ -66,7 +67,7 @@ public class QRScanActivity extends AppCompatActivity {
     }
 
     private void startCamera() {
-        androidx.camera.core.ProcessCameraProvider cameraProviderFuture;
+        androidx.camera.lifecycle.ProcessCameraProvider cameraProviderFuture;
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {

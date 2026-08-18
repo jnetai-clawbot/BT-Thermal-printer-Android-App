@@ -138,11 +138,16 @@ public class PrintTemplateActivity extends AppCompatActivity {
         String[] names = new String[recTemplates.size()];
         for (int i = 0; i < recTemplates.size(); i++) names[i] = recTemplates.get(i).name;
         templateSpinner = ThemeUI.spinnerWithListener(this, names.length == 0 ? new String[]{"No templates"} : names,
-                names.length == 0 ? "No templates" : names[0], (p, v, pos, id) -> {
-                    if (pos >= 0 && pos < recTemplates.size()) {
-                        currentTemplate = recTemplates.get(pos);
-                        onTemplateChanged();
+                names.length == 0 ? "No templates" : names[0], new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(android.widget.AdapterView<?> p, View v, int pos, long id) {
+                        if (pos >= 0 && pos < recTemplates.size()) {
+                            currentTemplate = recTemplates.get(pos);
+                            onTemplateChanged();
+                        }
                     }
+                    @Override
+                    public void onNothingSelected(android.widget.AdapterView<?> p) {}
                 });
         root.addView(templateSpinner);
     }
@@ -264,7 +269,7 @@ public class PrintTemplateActivity extends AppCompatActivity {
         android.graphics.Bitmap logo = templateStore.loadLogo(currentTemplate.name);
         PrintManager pm = new PrintManager(this, bt);
         PrintManager.PrintResult r = pm.printTemplate(currentTemplate, data, logo);
-        if (r == PrintResult.SUCCESS) {
+        if (r == PrintManager.PrintResult.SUCCESS) {
             Toast.makeText(this, "Receipt sent to printer", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Print failed: " + r.name(), Toast.LENGTH_LONG).show();
