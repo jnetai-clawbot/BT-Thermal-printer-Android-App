@@ -193,6 +193,9 @@ public class TemplateRenderer {
             res = res.replace("{cash}", money(data.tendered));
             res = res.replace("{change}", money(data.change));
             res = res.replace("{qty}", String.valueOf(data.items.size()));
+            if (res.contains("{items}")) {
+                res = res.replace("{items}", itemsBlockText(data, t));
+            }
         }
         res = res.replace("{date}", now);
         res = res.replace("{time}", nowTime);
@@ -261,6 +264,30 @@ public class TemplateRenderer {
 
     private static String money(double v) {
         return String.format(Locale.US, "%.2f", v);
+    }
+
+    private static String itemsBlockText(ReceiptData data, Template t) {
+        StringBuilder sb = new StringBuilder();
+        int col = t.isLabel ? Math.max(20, t.labelWidthMm * 8 / 12) : Math.max(20, t.widthMm * 8 / 12);
+        if (data.items.isEmpty()) {
+            return t.isLabel ? "" : "";
+        }
+        if (!t.isLabel) {
+            sb.append(padRight("Item", col - 16)).append(padLeft("Qty", 4)).append(" ").append(padLeft("Price", 11)).append("\n");
+            sb.append("--------------------------------\n");
+        }
+        for (ReceiptData.ReceiptItem item : data.items) {
+            if (t.isLabel) {
+                sb.append(item.name == null ? "" : item.name).append("\n");
+                if (!"1".equals(item.qty) && !"1.0".equals(item.qty)) sb.append("Qty: ").append(item.qty).append("\n");
+            } else {
+                String name = item.name == null ? "" : item.name;
+                String left = name.length() > col - 16 ? name.substring(0, Math.max(0, col - 16)) : name;
+                sb.append(padRight(left, col - 16)).append(padLeft(item.qty == null ? "1" : item.qty, 4))
+                        .append(" ").append(padLeft(money(item.price), 11)).append("\n");
+            }
+        }
+        return sb.toString();
     }
 
     public interface LogoProvider {

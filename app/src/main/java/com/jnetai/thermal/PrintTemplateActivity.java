@@ -2,19 +2,24 @@ package com.jnetai.thermal;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.InputType;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import com.jnetai.thermal.core.BluetoothHelper;
 import com.jnetai.thermal.core.PrintManager;
@@ -47,6 +52,15 @@ public class PrintTemplateActivity extends AppCompatActivity {
     private TextView previewLabel;
     private Spinner templateSpinner;
     private List<Template> templates;
+    private ImageView logoPreview;
+    private androidx.core.widget.NestedScrollView scrollView;
+
+    private final ActivityResultLauncher<Intent> logoPicker =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null && result.getData().getData() != null) {
+                    setLogo(result.getData().getData());
+                }
+            });
 
     private static class ItemRow {
         EditText name, qty, price;
@@ -63,6 +77,7 @@ public class PrintTemplateActivity extends AppCompatActivity {
 
         androidx.core.widget.NestedScrollView scroll = new androidx.core.widget.NestedScrollView(this);
         scroll.setBackgroundColor(ThemeUI.BG_DARK);
+        scrollView = scroll;
         LinearLayout root = ThemeUI.vertical(this);
 
         root.addView(ThemeUI.header(this, "Print Template (Receipt)"));
@@ -70,6 +85,33 @@ public class PrintTemplateActivity extends AppCompatActivity {
                 + "add items, then Print / Save / Email."));
 
         addSpinnerField(root, "Template");
+
+        root.addView(ThemeUI.subHeader(this, "Logo (prints top centre)"));
+        logoPreview = new ImageView(this);
+        logoPreview.setAdjustViewBounds(true);
+        logoPreview.setMaxHeight(ThemeUI.dp(this, 110));
+        logoPreview.setPadding(0, ThemeUI.dp(this, 4), 0, ThemeUI.dp(this, 4));
+        logoPreview.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        root.addView(logoPreview);
+        Button addLogoBtn = ThemeUI.button(this, "Add Logo");
+        addLogoBtn.setOnClickListener(v -> {
+            Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            pick.addCategory(Intent.CATEGORY_OPENABLE);
+            pick.setType("image/*");
+            logoPicker.launch(pick);
+        });
+        root.addView(addLogoBtn);
+        Button removeLogoBtn = ThemeUI.secondaryButton(this, "Remove Logo");
+        removeLogoBtn.setOnClickListener(v -> {
+            if (currentTemplate == null) return;
+            templateStore.deleteLogo(currentTemplate.name);
+            currentTemplate.logoEnabled = false;
+            templateStore.save(currentTemplate);
+            refreshLogoPreview();
+            Toast.makeText(this, "Logo removed", Toast.LENGTH_SHORT).show();
+        });
+        root.addView(removeLogoBtn);
 
         root.addView(ThemeUI.subHeader(this, "Receipt Details"));
         storeInput = ThemeUI.input(this, data.storeName, InputType.TYPE_CLASS_TEXT);
@@ -116,6 +158,8 @@ public class PrintTemplateActivity extends AppCompatActivity {
         root.getChildAt(root.getChildCount() - 1).setOnClickListener(v -> doSave());
         root.addView(ThemeUI.secondaryButton(this, "Email Receipt"));
         root.getChildAt(root.getChildCount() - 1).setOnClickListener(v -> doEmail());
+        root.addView(ThemeUI.button(this, "Save as Template"));
+        root.getChildAt(root.getChildCount() - 1).setOnClickListener(v -> saveAsTemplate());
         root.addView(ThemeUI.secondaryButton(this, "Select Printer"));
         root.getChildAt(root.getChildCount() - 1).setOnClickListener(v -> startActivity(new Intent(this, PrinterSelectActivity.class)));
 
@@ -170,7 +214,154 @@ public class PrintTemplateActivity extends AppCompatActivity {
 
     private void onTemplateChanged() {
         if (currentTemplate == null) return;
+        refreshLogoPreview();
         updatePreview();
+    }
+
+    private void refreshLogoPreview() {
+        if (logoPreview == null || currentTemplate == null) return;
+        Bitmap logo = templateStore.loadLogo(currentTemplate.name);
+        if (logo != null) {
+            logoPreview.setImageBitmap(logo);
+            logoPreview.setVisibility(View.VISIBLE);
+        } else {
+            logoPreview.setImageDrawable(null);
+        }
+    }
+
+    private void setLogo(Uri uri) {
+        if (currentTemplate == null) return;
+        try {
+            java.io.InputStream is = getContentResolver().openInputStream(uri);
+            if (is == null) return;
+            Bitmap bmp = android.graphics.BitmapFactory.decodeStream(is);
+            is.close();
+            if (bmp == null) {
+                Toast.makeText(this, "Could not decode logo image", Toast.LENGTH_LONG).show();
+                Diagnostics.log(ErrorCodes.IM_001, COMPONENT, "setLogo", "Decode failed");
+                return;
+            }
+            if (templateStore.saveLogo(currentTemplate.name, bmp)) {
+                currentTemplate.logoEnabled = true;
+                templateStore.save(currentTemplate);
+                refreshLogoPreview();
+                Toast.makeText(this, "Logo saved - it prints at the top centre of the receipt", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Logo load failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Diagnostics.log(ErrorCodes.IM_001, COMPONENT, "setLogo", e, "Uri=" + uri);
+        }
+    }
+
+    private void saveAsTemplate() {
+        if (currentTemplate == null) {
+            Toast.makeText(this, "Create a template first", Toast.LENGTH_LONG).show();
+            return;
+        }
+        syncDataFromInputs();
+        final EditText nameInput = ThemeUI.input(this, data.storeName.isEmpty() ? "My Template" : data.storeName,
+                InputType.TYPE_CLASS_TEXT);
+        LinearLayout wrap = new LinearLayout(this);
+        wrap.setOrientation(LinearLayout.VERTICAL);
+        wrap.setPadding(ThemeUI.dp(this, 20), ThemeUI.dp(this, 8), ThemeUI.dp(this, 20), 0);
+        wrap.addView(ThemeUI.info(this, "Save the current receipt layout as a reusable template.\n"
+                + "Items stay as {items} so you can print new versions later."));
+        wrap.addView(nameInput);
+        while (wrap.getChildCount() > 2) wrap.removeViewAt(2);
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Save as Template")
+                .setView(wrap)
+                .setPositiveButton("Save", (d, w) -> {
+                    String name = nameInput.getText().toString().trim();
+                    if (name.isEmpty()) {
+                        Toast.makeText(this, "Enter a template name", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    createSavedTemplate(name);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void createSavedTemplate(String name) {
+        try {
+            Template t = currentTemplate.cloneTemplate();
+            t.name = name;
+            t.isLabel = currentTemplate.isLabel;
+            t.labelWidthMm = currentTemplate.labelWidthMm;
+            t.labelHeightMm = currentTemplate.labelHeightMm;
+            if (!data.storeName.isEmpty()) t.title = data.storeName;
+            boolean hasItemsLine = false;
+            for (Template.TemplateLine line : t.lines) {
+                if ("items".equals(line.kind)) hasItemsLine = true;
+            }
+            if (!hasItemsLine) {
+                Template.TemplateLine items = new Template.TemplateLine();
+                items.kind = "items";
+                t.lines.add(items);
+            }
+            for (Template.TemplateLine line : t.lines) {
+                if ("text".equals(line.kind)) line.text = bakeValues(line.text);
+            }
+            Bitmap logo = null;
+            if (currentTemplate.logoEnabled) {
+                logo = templateStore.loadLogo(currentTemplate.name);
+                if (logo != null) {
+                    templateStore.saveLogo(name, logo);
+                    t.logoEnabled = true;
+                }
+            }
+            boolean ok = storeTemplateWithNameCheck(t);
+            if (!ok) return;
+            Toast.makeText(this, "Template '" + name + "' saved", Toast.LENGTH_LONG).show();
+            reloadTemplatesAndSelect(name);
+            new android.app.AlertDialog.Builder(this)
+                    .setTitle("Template saved")
+                    .setMessage("'"+ name + "' was saved. You can edit its lines (style, alignment, size, logo) in the Template Editor.")
+                    .setPositiveButton("Edit Now", (d, w) -> startActivity(new Intent(this, TemplateEditActivity.class)
+                            .putExtra("template_name", name)))
+                    .setNegativeButton("OK", null)
+                    .show();
+        } catch (Exception e) {
+            Diagnostics.log(ErrorCodes.TM_002, COMPONENT, "createSavedTemplate", e, "Name=" + name);
+            Toast.makeText(this, "Could not save template: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private boolean storeTemplateWithNameCheck(Template t) {
+        Template existing = templateStore.load(t.name);
+        if (existing != null) {
+            Toast.makeText(this, "A template named '" + t.name + "' already exists - choose another name", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return templateStore.save(t);
+    }
+
+    private String bakeValues(String text) {
+        if (text == null) return null;
+        String res = text;
+        res = res.replace("{store}", data.storeName);
+        res = res.replace("{header}", data.header);
+        res = res.replace("{footer}", data.footer);
+        res = res.replace("{number}", data.number);
+        res = res.replace("{cashier}", data.cashier);
+        return res;
+    }
+
+    private void reloadTemplatesAndSelect(String name) {
+        templates = templateStore.loadAll();
+        List<Template> recTemplates = new ArrayList<>(templates);
+        String[] names = new String[recTemplates.size()];
+        for (int i = 0; i < recTemplates.size(); i++) names[i] = recTemplates.get(i).name;
+        templateSpinner.setAdapter(new android.widget.ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, names));
+        for (int i = 0; i < recTemplates.size(); i++) {
+            if (recTemplates.get(i).name.equals(name)) {
+                templateSpinner.setSelection(i, true);
+                currentTemplate = recTemplates.get(i);
+                onTemplateChanged();
+                break;
+            }
+        }
     }
 
     private void addItemRow() {

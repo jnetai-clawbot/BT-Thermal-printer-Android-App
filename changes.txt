@@ -1,5 +1,26 @@
 # J~Net Thermal Printer - Changes Log
 
+## 2026-08-19 - v1.0.1
+### Changes
+- Added "Save as Template" button in Print Template (Receipt) mode
+  - Saves the current receipt layout as a reusable, named template (prompts for a name)
+  - Shop/receipt fields are baked into the template layout; the item list stays as the
+    {items} placeholder so new versions can simply refill the items and reprint
+  - The saved template appears in the template picker and can be edited afterwards
+    (lines, style, alignment, size, logo) via the Template Editor
+  - After saving you can jump straight into the editor
+- {items} placeholder now works in any text line
+  - "instead of added items it just says {items}" is fixed: when the item list is
+    present it is expanded into the receipt at that point; when empty it prints nothing
+- Added "Add Logo" button in Print Template (Receipt) mode (with "Remove Logo")
+  - Choose an image from storage; it is stored with the template
+  - The logo shows as a preview at the top of the screen (top-centre) in the receipt builder
+  - It is printed top-centre on the receipt when printed out (existing behaviour, now
+    dependable because the logo is stored per-template and shown/confirmed in the UI)
+- Version bumped to v1.0.1 (versionCode 2); update installs over v1.0.0 without uninstall
+  (same ciphervault keystore)
+- v1.0.0 APK backed up to Backup/J~Net-Thermal-Printer-v1.0.0.apk before this update
+
 ## 2026-08-18 - v1.0.0
 ### Initial Release
 - Full English Android app: Bluetooth thermal POS printer (PT210 compatible)
@@ -32,4 +53,3 @@
   updates install over this version without needing an uninstall
 - GitHub Release (newest): https://github.com/jnetai-clawbot/BT-Thermal-printer-Android-App/releases
   (tag v1.0.0, asset J.Net-Thermal-Printer.apk - GitHub strips the ~ in the name)
-- No backups made yet: no major updates have been applied since the first working release
