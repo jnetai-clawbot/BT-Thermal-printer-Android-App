@@ -21,6 +21,13 @@
   (same ciphervault keystore)
 - v1.0.0 APK backed up to Backup/J~Net-Thermal-Printer-v1.0.0.apk before this update
 
+## 2026-08-19 - v1.0.1 (release completed)
+- Built successfully on GitHub Actions (workflow run 32200586202)
+- New APK downloaded to apk/J~Net-Thermal-Printer.apk (signed with ciphervault keystore,
+  SHA-256 6e40639a... - same as v1.0.0 so it updates in place without uninstall)
+- GitHub Release (newest): https://github.com/jnetai-clawbot/BT-Thermal-printer-Android-App/releases
+  (tag v1.0.1, asset J.Net-Thermal-Printer.apk)
+
 ## 2026-08-18 - v1.0.0
 ### Initial Release
 - Full English Android app: Bluetooth thermal POS printer (PT210 compatible)
