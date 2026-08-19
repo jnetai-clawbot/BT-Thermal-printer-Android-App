@@ -128,6 +128,37 @@ public class ThemeUI {
         return gd;
     }
 
+    /**
+     * Dark-styled ArrayAdapter with white text so template/item names are always
+     * readable regardless of the current theme.
+     */
+    public static ArrayAdapter<String> darkArrayAdapter(final Context ctx, String[] items) {
+        return new ArrayAdapter<String>(ctx, android.R.layout.simple_spinner_item, items) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                TextView tv = convertView instanceof TextView ? (TextView) convertView : new TextView(ctx);
+                tv.setText(getItem(position));
+                tv.setTextSize(16);
+                tv.setTextColor(ThemeUI.TEXT_WHITE);
+                tv.setTypeface(Typeface.DEFAULT_BOLD);
+                tv.setPadding(ThemeUI.dp(ctx, 12), ThemeUI.dp(ctx, 12), ThemeUI.dp(ctx, 12), ThemeUI.dp(ctx, 12));
+                tv.setBackground(ThemeUI.rounded(ThemeUI.CARD, 0));
+                return tv;
+            }
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                TextView tv = convertView instanceof TextView ? (TextView) convertView : new TextView(ctx);
+                tv.setText(getItem(position));
+                tv.setTextSize(16);
+                tv.setTextColor(ThemeUI.TEXT_WHITE);
+                tv.setTypeface(Typeface.DEFAULT_BOLD);
+                tv.setPadding(ThemeUI.dp(ctx, 12), ThemeUI.dp(ctx, 12), ThemeUI.dp(ctx, 12), ThemeUI.dp(ctx, 12));
+                tv.setBackground(ThemeUI.rounded(ThemeUI.SURFACE, 0));
+                return tv;
+            }
+        };
+    }
+
     public static Spinner spinnerWithListener(final Context ctx, String[] items, String selected, AdapterView.OnItemSelectedListener listener) {
         Spinner sp = new Spinner(ctx);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(ctx, android.R.layout.simple_spinner_item, items) {

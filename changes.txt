@@ -1,5 +1,13 @@
 # J~Net Thermal Printer - Changes Log
 
+## 2026-08-19 - v1.0.2
+### Fixes
+- Template name (and other dropdown names) now always render as white text on a dark
+  background, regardless of the current theme. Previously the template picker dropdown
+  used the default light-text-on-light layout, so the template name was dark-on-dark and
+  unreadable. Now the picker always uses the dark white-text style.
+- v1.0.1 APK backed up to Backup/J~Net-Thermal-Printer-v1.0.1.apk before this update.
+
 ## 2026-08-19 - v1.0.1
 ### Changes
 - Added "Save as Template" button in Print Template (Receipt) mode

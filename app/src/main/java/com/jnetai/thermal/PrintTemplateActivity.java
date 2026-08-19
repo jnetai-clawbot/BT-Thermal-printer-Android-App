@@ -198,11 +198,10 @@ public class PrintTemplateActivity extends AppCompatActivity {
 
     private void loadTemplates() {
         templates = templateStore.loadAll();
-        List<Template> recTemplates = new ArrayList<>();
-        for (Template t : templates) recTemplates.add(t);
+        List<Template> recTemplates = new ArrayList<>(templates);
         String[] names = new String[recTemplates.size()];
         for (int i = 0; i < recTemplates.size(); i++) names[i] = recTemplates.get(i).name;
-        templateSpinner.setAdapter(new android.widget.ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, names));
+        templateSpinner.setAdapter(ThemeUI.darkArrayAdapter(this, names.length == 0 ? new String[]{"No templates"} : names));
         if (recTemplates.isEmpty()) {
             currentTemplate = null;
             return;
@@ -353,7 +352,7 @@ public class PrintTemplateActivity extends AppCompatActivity {
         List<Template> recTemplates = new ArrayList<>(templates);
         String[] names = new String[recTemplates.size()];
         for (int i = 0; i < recTemplates.size(); i++) names[i] = recTemplates.get(i).name;
-        templateSpinner.setAdapter(new android.widget.ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, names));
+        templateSpinner.setAdapter(ThemeUI.darkArrayAdapter(this, names.length == 0 ? new String[]{"No templates"} : names));
         for (int i = 0; i < recTemplates.size(); i++) {
             if (recTemplates.get(i).name.equals(name)) {
                 templateSpinner.setSelection(i, true);
