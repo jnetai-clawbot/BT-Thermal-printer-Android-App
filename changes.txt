@@ -8,6 +8,13 @@
   unreadable. Now the picker always uses the dark white-text style.
 - v1.0.1 APK backed up to Backup/J~Net-Thermal-Printer-v1.0.1.apk before this update.
 
+## 2026-08-19 - v1.0.2 (release completed)
+- Built successfully on GitHub Actions
+- New APK downloaded to apk/J~Net-Thermal-Printer.apk (same ciphervault keystore,
+  SHA-256 6e40639a..., so it updates in place without uninstall)
+- GitHub Release (newest): https://github.com/jnetai-clawbot/BT-Thermal-printer-Android-App/releases
+  (tag v1.0.2, asset J.Net-Thermal-Printer.apk)
+
 ## 2026-08-19 - v1.0.1
 ### Changes
 - Added "Save as Template" button in Print Template (Receipt) mode
