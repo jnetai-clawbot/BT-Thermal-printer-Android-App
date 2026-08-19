@@ -1,5 +1,22 @@
 # J~Net Thermal Printer - Changes Log
 
+## 2026-08-19 - v1.0.3
+### Changes
+- Added date & time to receipts with format options in Settings
+  - "Print date & time on receipt" toggle: when ON it adds the date and time of
+    receipt generation (the moment the receipt was created) to the receipt
+  - Date Format options: dd/MM/yyyy, MM/dd/yyyy, yyyy-MM-dd, dd.MM.yyyy, MMM dd, yyyy
+  - Time Format options: HH:mm, HH:mm:ss, h:mm a, h:mm:ss a, HH:mm
+  - New placeholders available in template lines: {date}, {time}, {datetime}
+  - The auto-printed date/time is not duplicated if a template already uses a
+    date/time placeholder
+- Date/time override in Settings
+  - "Override date & time" toggle: when ON the receipt uses your custom date/time
+    instead of the generation time
+  - "Set Custom Date & Time" button opens a date picker then time picker to choose
+    the value used on receipts
+- v1.0.2 APK backed up to Backup/J~Net-Thermal-Printer-v1.0.2.apk before this update.
+
 ## 2026-08-19 - v1.0.2
 ### Fixes
 - Template name (and other dropdown names) now always render as white text on a dark

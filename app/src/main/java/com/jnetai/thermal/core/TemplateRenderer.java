@@ -50,9 +50,23 @@ public class TemplateRenderer {
             }
 
             if (t.isLabel) {
-                renderLabel(e, t, data, charset);
+                renderLabel(e, t, data, charset, settings);
             } else {
-                renderLines(e, t, data, charset, widthDots);
+                renderLines(e, t, data, charset, widthDots, settings);
+            }
+
+            if (settings.isPrintDateTime()) {
+                String dt = formattedDateTime(settings);
+                boolean already = containsDateTime(t, data, settings);
+                if (!already) {
+                    e.setSize(1, 1);
+                    e.setBold(false);
+                    e.setUnderline(0);
+                    e.setAlignment(0);
+                    e.write(dt, charset);
+                    e.newline();
+                    resetStyle(e);
+                }
             }
 
             if (t.feedAfter > 0) e.feedLines(t.feedAfter);
@@ -65,7 +79,7 @@ public class TemplateRenderer {
         }
     }
 
-    private static void renderLabel(EscPos e, Template t, ReceiptData data, String charset) {
+    private static void renderLabel(EscPos e, Template t, ReceiptData data, String charset, SettingsStore settings) {
         for (Template.TemplateLine line : t.lines) {
             if ("spacer".equals(line.kind)) {
                 e.feedLines(line.spacerCount);
@@ -86,7 +100,7 @@ public class TemplateRenderer {
                     }
                 }
             } else {
-                String text = substitute(line.text, t, data);
+                String text = substitute(line.text, t, data, settings);
                 if (text == null || text.isEmpty()) continue;
                 applyLineStyle(e, line);
                 e.setAlignment(line.align);
@@ -97,7 +111,7 @@ public class TemplateRenderer {
         }
     }
 
-    private static void renderLines(EscPos e, Template t, ReceiptData data, String charset, int widthDots) {
+    private static void renderLines(EscPos e, Template t, ReceiptData data, String charset, int widthDots, SettingsStore settings) {
         for (Template.TemplateLine line : t.lines) {
             if ("spacer".equals(line.kind)) {
                 e.feedLines(line.spacerCount);
@@ -107,7 +121,7 @@ public class TemplateRenderer {
                 renderItemBlock(e, data, charset, widthDots);
                 continue;
             }
-            String text = substitute(line.text, t, data);
+            String text = substitute(line.text, t, data, settings);
             if (text == null || text.isEmpty()) continue;
 
             if (line.dash) {
@@ -175,10 +189,14 @@ public class TemplateRenderer {
         return sb.toString();
     }
 
-    private static String substitute(String text, Template t, ReceiptData data) {
+    private static String substitute(String text, Template t, ReceiptData data, SettingsStore settings) {
         if (text == null) return null;
-        String now = new SimpleDateFormat("dd/MM/yyyy", Locale.US).format(new Date());
-        String nowTime = new SimpleDateFormat("HH:mm", Locale.US).format(new Date());
+        long stamp = currentTimestamp(settings);
+        String dateFormat = safePattern(settings != null ? settings.getDateFormat() : "dd/MM/yyyy");
+        String timeFormat = safePattern(settings != null ? settings.getTimeFormat() : "HH:mm");
+        String now = new SimpleDateFormat(dateFormat, Locale.US).format(new Date(stamp));
+        String nowTime = new SimpleDateFormat(timeFormat, Locale.US).format(new Date(stamp));
+        String nowDateTime = new SimpleDateFormat(dateFormat + " " + timeFormat, Locale.US).format(new Date(stamp));
         String res = text;
         if (data != null) {
             res = res.replace("{store}", safe(data.storeName));
@@ -199,10 +217,40 @@ public class TemplateRenderer {
         }
         res = res.replace("{date}", now);
         res = res.replace("{time}", nowTime);
+        res = res.replace("{datetime}", nowDateTime);
         return res;
     }
 
-    public static String previewText(Template t, ReceiptData data) {
+    private static long currentTimestamp(SettingsStore settings) {
+        if (settings != null && settings.isDateTimeOverride()) {
+            return settings.getDateTimeOverrideMillis();
+        }
+        return System.currentTimeMillis();
+    }
+
+    private static String safePattern(String p) {
+        if (p == null || p.trim().isEmpty()) return "dd/MM/yyyy HH:mm";
+        return p;
+    }
+
+    private static String formattedDateTime(SettingsStore settings) {
+        long stamp = currentTimestamp(settings);
+        String dateFormat = safePattern(settings != null ? settings.getDateFormat() : "dd/MM/yyyy");
+        String timeFormat = safePattern(settings != null ? settings.getTimeFormat() : "HH:mm");
+        return new SimpleDateFormat(dateFormat + " " + timeFormat, Locale.US).format(new Date(stamp));
+    }
+
+    private static boolean containsDateTime(Template t, ReceiptData data, SettingsStore settings) {
+        for (Template.TemplateLine line : t.lines) {
+            if (line.text != null && (line.text.contains("{date}") || line.text.contains("{time}")
+                    || line.text.contains("{datetime}"))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static String previewText(Template t, ReceiptData data, SettingsStore settings) {
         StringBuilder sb = new StringBuilder();
         int col = t.isLabel ? Math.max(20, t.labelWidthMm * 8 / 12) : Math.max(20, t.widthMm * 8 / 12);
         for (Template.TemplateLine line : t.lines) {
@@ -226,7 +274,7 @@ public class TemplateRenderer {
                 }
                 continue;
             }
-            String text = substitute(line.text, t, data);
+            String text = substitute(line.text, t, data, settings);
             if (text == null || text.isEmpty()) continue;
             if (line.dash) {
                 sb.append(centerOrAlign("--------------------------------", col, line.align)).append("\n");
@@ -236,6 +284,9 @@ public class TemplateRenderer {
         }
         if (t.logoEnabled) {
             sb.insert(0, "[LOGO]\n");
+        }
+        if (settings != null && settings.isPrintDateTime() && !containsDateTime(t, data, settings)) {
+            sb.append(formattedDateTime(settings)).append("\n");
         }
         return sb.toString();
     }

@@ -151,4 +151,35 @@ public class SettingsStore {
         try { prefs.edit().putInt("repeat_interval", Math.max(0, Math.min(600, v))).apply(); logSaveError("repeat_interval", null); }
         catch (Exception e) { logSaveError("repeat_interval", e); }
     }
+
+    public boolean isPrintDateTime() { return prefs.getBoolean("print_datetime", false); }
+    public void setPrintDateTime(boolean v) {
+        try { prefs.edit().putBoolean("print_datetime", v).apply(); logSaveError("print_datetime", null); }
+        catch (Exception e) { logSaveError("print_datetime", e); }
+    }
+
+    public String getDateFormat() { return prefs.getString("date_format", "dd/MM/yyyy"); }
+    public void setDateFormat(String v) {
+        try { prefs.edit().putString("date_format", v).apply(); logSaveError("date_format", null); }
+        catch (Exception e) { logSaveError("date_format", e); }
+    }
+
+    public String getTimeFormat() { return prefs.getString("time_format", "HH:mm"); }
+    public void setTimeFormat(String v) {
+        try { prefs.edit().putString("time_format", v).apply(); logSaveError("time_format", null); }
+        catch (Exception e) { logSaveError("time_format", e); }
+    }
+
+    public boolean isDateTimeOverride() { return prefs.getBoolean("datetime_override", false); }
+    public void setDateTimeOverride(boolean v) {
+        try { prefs.edit().putBoolean("datetime_override", v).apply(); logSaveError("datetime_override", null); }
+        catch (Exception e) { logSaveError("datetime_override", e); }
+    }
+
+    /** Custom date/time used instead of the generation time when override is enabled (ms since epoch). */
+    public long getDateTimeOverrideMillis() { return prefs.getLong("datetime_override_millis", System.currentTimeMillis()); }
+    public void setDateTimeOverrideMillis(long v) {
+        try { prefs.edit().putLong("datetime_override_millis", v).apply(); logSaveError("datetime_override_millis", null); }
+        catch (Exception e) { logSaveError("datetime_override_millis", e); }
+    }
 }

@@ -158,6 +158,25 @@ public class SettingsActivity extends AppCompatActivity {
         content.addView(ThemeUI.subHeader(this, "Other"));
         addSwitchRow("Show print confirmation dialog", "Ask before sending a print job", settings.isShowPrintDialog(), settings::setShowPrintDialog);
 
+        content.addView(ThemeUI.subHeader(this, "Date & Time"));
+        content.addView(ThemeUI.info(this, "Print the date and time of receipt generation on the receipt.\n"
+                + "Placeholders: {date} {time} {datetime}. You can also set a custom date/time."));
+        addSwitchRow("Print date & time on receipt", "Add date/time of generation to receipts", settings.isPrintDateTime(), settings::setPrintDateTime);
+
+        String[] dateFormats = {"dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd", "dd.MM.yyyy", "MMM dd, yyyy"};
+        addSpinnerRow("Date Format", dateFormats, dateFormatValue(), sp ->
+                settings.setDateFormat((String) sp.getSelectedItem()));
+
+        String[] timeFormats = {"HH:mm", "HH:mm:ss", "h:mm a", "h:mm:ss a", "HH:mm (24h)"};
+        addSpinnerRow("Time Format", timeFormats, timeFormatValue(), sp ->
+                settings.setTimeFormat((String) sp.getSelectedItem()));
+
+        addSwitchRow("Override date & time", "Use a custom date/time instead of the generation time", settings.isDateTimeOverride(), settings::setDateTimeOverride);
+
+        Button setDateTimeBtn = ThemeUI.secondaryButton(this, "Set Custom Date & Time");
+        setDateTimeBtn.setOnClickListener(v -> showDateTimePicker());
+        content.addView(setDateTimeBtn);
+
         Button diagnosticsBtn = ThemeUI.secondaryButton(this, "View Diagnostics Log");
         diagnosticsBtn.setOnClickListener(v -> showDiagnostics());
         content.addView(diagnosticsBtn);
@@ -177,6 +196,43 @@ public class SettingsActivity extends AppCompatActivity {
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
         };
+    }
+
+    private String dateFormatValue() {
+        String f = settings.getDateFormat();
+        for (String s : new String[]{"dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd", "dd.MM.yyyy", "MMM dd, yyyy"}) {
+            if (s.equals(f)) return s;
+        }
+        return "dd/MM/yyyy";
+    }
+
+    private String timeFormatValue() {
+        String f = settings.getTimeFormat();
+        String[] opts = {"HH:mm", "HH:mm:ss", "h:mm a", "h:mm:ss a", "HH:mm (24h)"};
+        for (String s : opts) {
+            if (s.equals(f)) return s;
+        }
+        return "HH:mm";
+    }
+
+    private void showDateTimePicker() {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(settings.getDateTimeOverrideMillis());
+        new android.app.DatePickerDialog(this, (view, year, month, day) -> {
+            final java.util.Calendar chosen = java.util.Calendar.getInstance();
+            chosen.set(year, month, day);
+            new android.app.TimePickerDialog(this, (tv, hour, minute) -> {
+                chosen.set(java.util.Calendar.HOUR_OF_DAY, hour);
+                chosen.set(java.util.Calendar.MINUTE, minute);
+                chosen.set(java.util.Calendar.SECOND, 0);
+                chosen.set(java.util.Calendar.MILLISECOND, 0);
+                settings.setDateTimeOverrideMillis(chosen.getTimeInMillis());
+                settings.setDateTimeOverride(true);
+                Toast.makeText(this, "Custom date & time set: "
+                        + java.text.DateFormat.getDateTimeInstance().format(chosen.getTime()), Toast.LENGTH_LONG).show();
+                Diagnostics.info("SettingsActivity", "showDateTimePicker", "Override set to " + chosen.getTimeInMillis());
+            }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show();
+        }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.DAY_OF_MONTH)).show();
     }
 
     private String alignValue() {

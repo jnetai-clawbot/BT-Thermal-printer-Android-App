@@ -437,7 +437,7 @@ public class PrintTemplateActivity extends AppCompatActivity {
         if (previewLabel == null || currentTemplate == null) return;
         syncDataFromInputs();
         try {
-            String preview = TemplateRenderer.previewText(currentTemplate, data);
+            String preview = TemplateRenderer.previewText(currentTemplate, data, settings);
             previewLabel.setText(preview.isEmpty() ? "No preview content" : preview);
         } catch (Exception e) {
             previewLabel.setText("Preview error: " + e.getMessage());
@@ -473,7 +473,7 @@ public class PrintTemplateActivity extends AppCompatActivity {
             return;
         }
         syncDataFromInputs();
-        String rendered = TemplateRenderer.previewText(currentTemplate, data);
+        String rendered = TemplateRenderer.previewText(currentTemplate, data, settings);
         String fileName = receiptStore.save(data, rendered, currentTemplate.isLabel,
                 currentTemplate.isLabel ? currentTemplate.name : (data.storeName.isEmpty() ? "Receipt" : data.storeName));
         if (fileName == null) {
@@ -493,7 +493,7 @@ public class PrintTemplateActivity extends AppCompatActivity {
             return;
         }
         syncDataFromInputs();
-        String rendered = TemplateRenderer.previewText(currentTemplate, data);
+        String rendered = TemplateRenderer.previewText(currentTemplate, data, settings);
         try {
             Intent email = new Intent(Intent.ACTION_SEND);
             email.setType("text/plain");
