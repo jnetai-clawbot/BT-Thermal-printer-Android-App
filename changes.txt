@@ -17,6 +17,13 @@
     the value used on receipts
 - v1.0.2 APK backed up to Backup/J~Net-Thermal-Printer-v1.0.2.apk before this update.
 
+## 2026-08-19 - v1.0.3 (release completed)
+- Built successfully on GitHub Actions
+- New APK downloaded to apk/J~Net-Thermal-Printer.apk (same ciphervault keystore so it
+  updates in place without uninstall)
+- GitHub Release (newest): https://github.com/jnetai-clawbot/BT-Thermal-printer-Android-App/releases
+  (tag v1.0.3, asset J.Net-Thermal-Printer.apk)
+
 ## 2026-08-19 - v1.0.2
 ### Fixes
 - Template name (and other dropdown names) now always render as white text on a dark
